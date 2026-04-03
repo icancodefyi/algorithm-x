@@ -1,11 +1,30 @@
-import React from 'react'
+import {
+  Navbar,
+  HeroSection,
+  ProblemSection,
+  HowItWorksSection,
+  ReportPreviewSection,
+  FeaturesSection,
+  AudienceSection,
+  CTASection,
+  Footer,
+} from "@/components/landing";
 
-const page = () => {
+export default function Page() {
   return (
-    <div >
-      
-    </div>
-  )
+    <>
+    {/* this is the test comment  */}
+      <Navbar />
+      <main>
+        <HeroSection />
+        <ProblemSection />
+        <HowItWorksSection />
+        <FeaturesSection />
+        <ReportPreviewSection />
+        <AudienceSection />
+        <CTASection />
+      </main>
+      <Footer />
+    </>
+  );
 }
-
-export default page
