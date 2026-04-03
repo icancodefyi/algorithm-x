@@ -196,7 +196,7 @@ export const translations: Record<string, Translations> = {
       badge: "Free · Private · No account required",
       heading1: "Found a fake image of you?",
       heading2: "Get proof. Get it removed.",
-      body: "Upload the image. We run a full forensic analysis in under 60 seconds and give you a certified evidence report — with the exact removal contact for wherever it's hosted.",
+      body: "Upload the image. We run a full forensic analysis in under 60 seconds and give you a certified evidence report with the exact removal contact for wherever it's hosted.",
       ctaPrimary: "Analyze an Image",
       ctaSecondary: "See how it works",
       trust1: "No account required",

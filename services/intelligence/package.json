@@ -1,0 +1,9 @@
+{
+  "name": "@sniffer/intelligence",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ../../scripts/run-service.cjs --port 8002",
+    "start": "node ../../scripts/run-service.cjs --port 8002 --no-reload"
+  }
+}

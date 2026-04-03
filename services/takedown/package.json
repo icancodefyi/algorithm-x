@@ -1,0 +1,9 @@
+{
+  "name": "@sniffer/takedown",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ../../scripts/run-service.cjs --port 8003",
+    "start": "node ../../scripts/run-service.cjs --port 8003 --no-reload"
+  }
+}

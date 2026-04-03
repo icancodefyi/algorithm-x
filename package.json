@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "concurrently --names \"web,analysis,intel,takedown\" --prefix-colors \"blue,green,yellow,magenta\" \"pnpm run dev:web\" \"pnpm --filter @sniffer/analysis dev\" \"pnpm --filter @sniffer/intelligence dev\" \"pnpm --filter @sniffer/takedown dev\"",
+    "dev:web": "next dev --port 3000",
     "dev:services": "concurrently --names \"analysis,intel,takedown\" --prefix-colors \"green,yellow,magenta\" \"pnpm --filter @sniffer/analysis dev\" \"pnpm --filter @sniffer/intelligence dev\" \"pnpm --filter @sniffer/takedown dev\"",
+    "dev:api": "pnpm --filter @sniffer/analysis dev",
+    "dev:intel": "pnpm --filter @sniffer/intelligence dev",
+    "dev:takedown": "pnpm --filter @sniffer/takedown dev",
     "build": "next build",
-    "start": "next start",
+    "start": "concurrently --names \"web,analysis,intel,takedown\" --prefix-colors \"blue,green,yellow,magenta\" \"pnpm run start:web\" \"pnpm --filter @sniffer/analysis start\" \"pnpm --filter @sniffer/intelligence start\" \"pnpm --filter @sniffer/takedown start\"",
+    "start:web": "next start --port 3000",
     "lint": "eslint"
   },
   "dependencies": {
