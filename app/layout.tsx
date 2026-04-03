@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXTAUTH_URL ?? "http://localhost:3000",
+  ),
   title: "Sniffer - Digital Media Authenticity Verification",
   description:
     "Verify manipulated images, detect deepfakes, and generate structured evidence reports for reporting and takedown actions.",

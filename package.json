@@ -12,7 +12,8 @@
     "build": "next build",
     "start": "concurrently --names \"web,analysis,intel,takedown\" --prefix-colors \"blue,green,yellow,magenta\" \"pnpm run start:web\" \"pnpm --filter @sniffer/analysis start\" \"pnpm --filter @sniffer/intelligence start\" \"pnpm --filter @sniffer/takedown start\"",
     "start:web": "next start --port 3000",
-    "lint": "eslint"
+    "lint": "eslint",
+    "install:py": "node scripts/setup-python-venv.cjs"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",
