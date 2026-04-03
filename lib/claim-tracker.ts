@@ -1,4 +1,4 @@
-import clientPromise from "@/lib/mongodb";
+import { getMongoClient } from "@/lib/mongodb";
 
 export type ClaimEventType =
   | "case_created"
@@ -25,7 +25,7 @@ function buildCaseRef(caseId: string): string {
 }
 
 export async function recordClaimEvent(input: RecordClaimEventInput): Promise<{ insertedCase: boolean }> {
-  const client = await clientPromise;
+  const client = await getMongoClient();
   const db = client.db("snifferX");
   const eventsCol = db.collection("claim_events");
   const casesCol = db.collection("cases");
@@ -92,7 +92,7 @@ export async function recordClaimEvent(input: RecordClaimEventInput): Promise<{ 
 }
 
 export async function getClaimStats() {
-  const client = await clientPromise;
+  const client = await getMongoClient();
   const db = client.db("snifferX");
   const metricsCol = db.collection("claim_metrics");
   const casesCol = db.collection("cases");

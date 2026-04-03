@@ -1,24 +1,31 @@
 import { MongoClient } from "mongodb";
 
-const uri = process.env.MONGODB_URI ?? "";
-
-let clientPromise: Promise<MongoClient>;
-
-if (!uri) {
-  // Return a promise that rejects clearly instead of throwing at import time.
-  clientPromise = Promise.reject(
-    new Error("MONGODB_URI is not set. Add it to apps/web/.env.local"),
-  );
-} else if (process.env.NODE_ENV === "development") {
-  const globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
-  };
-  if (!globalWithMongo._mongoClientPromise) {
-    globalWithMongo._mongoClientPromise = new MongoClient(uri).connect();
-  }
-  clientPromise = globalWithMongo._mongoClientPromise;
-} else {
-  clientPromise = new MongoClient(uri).connect();
+declare global {
+  // eslint-disable-next-line no-var
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-export default clientPromise;
+/**
+ * Lazy Mongo client — avoids rejecting or connecting at module load time
+ * (so `next build` works without MONGODB_URI until a route actually runs).
+ */
+export function getMongoClient(): Promise<MongoClient> {
+  const uri = process.env.MONGODB_URI ?? "";
+  if (!uri) {
+    return Promise.reject(
+      new Error("MONGODB_URI is not set. Add it to .env.local"),
+    );
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    if (!global._mongoClientPromise) {
+      global._mongoClientPromise = new MongoClient(uri).connect();
+    }
+    return global._mongoClientPromise;
+  }
+
+  if (!global._mongoClientPromise) {
+    global._mongoClientPromise = new MongoClient(uri).connect();
+  }
+  return global._mongoClientPromise;
+}

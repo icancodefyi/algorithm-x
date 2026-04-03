@@ -130,7 +130,7 @@
   }
 }
 
-/* ── Sniffer custom animations ── */
+/* ── Landing hero animations ── */
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
@@ -142,21 +142,12 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes hero-illustration-enter {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
-}
-
 .animate-float {
   animation: float 5s ease-in-out infinite;
 }
 
 .hero-text-enter {
   animation: hero-text-enter 0.65s ease-out both;
-}
-
-.hero-illustration-enter {
-  animation: hero-illustration-enter 0.75s ease-out 0.15s both;
 }
 
 /* ── Forensic Analysis UI ── */
