@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { useTranslation } from "@/components/i18n/LanguageProvider";
 import { ContentTrace } from "./ContentTrace";
 import { LeakActionConsole } from "./LeakActionConsole";
 import type { CaseData } from "./types";
@@ -14,12 +16,7 @@ interface Props {
   suspiciousImg: string | null;
   isCaseSaved: boolean;
   isSaving: boolean;
-  saveSent: boolean;
-  saveEmail: string;
-  onSaveEmailChange: (v: string) => void;
-  onSendMagicLink: (e: React.FormEvent) => void;
   onSaveCase: () => void;
-  sessionUserId?: string;
 }
 
 export function NCIIReportLayout({
@@ -28,14 +25,18 @@ export function NCIIReportLayout({
   suspiciousImg,
   isCaseSaved,
   isSaving,
-  saveSent,
-  saveEmail,
-  onSaveEmailChange,
-  onSendMagicLink,
   onSaveCase,
-  sessionUserId,
 }: Props) {
+  const { t } = useTranslation();
+  const [caseRefCopied, setCaseRefCopied] = useState(false);
   const caseRef = buildCaseRef(caseId);
+
+  function copyCaseRefToClipboard() {
+    void navigator.clipboard.writeText(caseRef).then(() => {
+      setCaseRefCopied(true);
+      setTimeout(() => setCaseRefCopied(false), 2000);
+    });
+  }
   const reportMeta = [
     { label: "Date", value: formatDate(caseData.created_at) },
     { label: "Source Platform", value: caseData.platform_source },
@@ -60,24 +61,15 @@ export function NCIIReportLayout({
           <span className="text-[#d4cfc9]">/</span>
           <span className="text-[11px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Investigation Report</span>
           <div className="ml-auto flex items-center gap-2">
-            {!isCaseSaved && !saveSent && (
-              sessionUserId ? (
-                <button
-                  onClick={onSaveCase}
-                  disabled={isSaving}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-3 py-1.5 text-[11.5px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors disabled:opacity-50"
-                >
-                  {isSaving && <div className="h-2.5 w-2.5 rounded-full border-2 border-[#9ca3af] border-t-[#0a0a0a] animate-spin" />}
-                  {isSaving ? "Saving…" : "Save report"}
-                </button>
-              ) : (
-                <button
-                  onClick={() => document.getElementById("save-well")?.scrollIntoView({ behavior: "smooth" })}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-3 py-1.5 text-[11.5px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors"
-                >
-                  Save report
-                </button>
-              )
+            {!isCaseSaved && (
+              <button
+                onClick={onSaveCase}
+                disabled={isSaving}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-3 py-1.5 text-[11.5px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors disabled:opacity-50"
+              >
+                {isSaving && <div className="h-2.5 w-2.5 rounded-full border-2 border-[#9ca3af] border-t-[#0a0a0a] animate-spin" />}
+                {isSaving ? "Saving…" : "Save report"}
+              </button>
             )}
             {isCaseSaved && (
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-1.5 text-[11.5px] font-medium text-[#6b7280]">
@@ -280,40 +272,17 @@ export function NCIIReportLayout({
             <span className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-[0.28em]">Removal Actions</span>
           </div>
 
-          {/* Save report well (shown for unauthenticated when not sent) */}
-          {!isCaseSaved && !saveSent && !sessionUserId && (
-            <div id="save-well" className="mb-6 rounded-xl border border-[#e8e4de] bg-white px-6 py-5">
-              <p className="text-[13px] font-medium text-[#0a0a0a] mb-0.5">Save this report</p>
-              <p className="text-[12px] text-[#6b7280] mb-4">We&apos;ll email you a magic link — no password needed.</p>
-              <form onSubmit={onSendMagicLink} className="flex gap-2 max-w-sm">
-                <input
-                  type="email"
-                  value={saveEmail}
-                  onChange={(e) => onSaveEmailChange(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  className="flex-1 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3.5 py-2 text-[12px] text-[#0a0a0a] placeholder:text-[#c4bdb5] focus:outline-none focus:border-[#0a0a0a] transition-colors"
-                />
-                <button
-                  type="submit"
-                  disabled={!saveEmail.trim() || isSaving}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#0a0a0a] px-4 py-2 text-[12px] font-medium text-white hover:bg-[#1a1a1a] transition-colors disabled:opacity-40"
-                >
-                  {isSaving && <div className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-                  {isSaving ? "Sending…" : "Send link"}
-                </button>
-              </form>
-            </div>
-          )}
-          {!isCaseSaved && saveSent && (
-            <div className="mb-6 flex items-center gap-3 rounded-xl border border-[#e8e4de] bg-white px-5 py-4">
-              <svg width="14" height="14" fill="none" stroke="#0a0a0a" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
-              <p className="text-[12.5px] text-[#0a0a0a]">Magic link sent to <span className="font-medium">{saveEmail}</span> — click it to save this report.</p>
-            </div>
-          )}
+          <div className="mb-6 rounded-xl border border-[#e8e4de] bg-white px-6 py-5">
+            <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af] mb-1.5">{t.report.caseRef}</p>
+            <p className="text-[15px] font-mono font-semibold text-[#0a0a0a] tracking-tight mb-4">{caseRef}</p>
+            <button
+              type="button"
+              onClick={copyCaseRefToClipboard}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3.5 py-2 text-[12px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors"
+            >
+              {caseRefCopied ? t.report.copied : t.report.copyCaseRef}
+            </button>
+          </div>
 
           {/* Bulk takedown */}
           <div className="mb-6 overflow-hidden rounded-xl border border-[#e8e4de] bg-white">

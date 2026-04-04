@@ -142,12 +142,7 @@ export function ReportWorkflowShell({ children }: { children: React.ReactNode })
     copyHash,
     isCaseSaved,
     isSaving,
-    saveSent,
-    saveEmail,
-    setSaveEmail,
-    handleSendMagicLink,
     handleSaveCase,
-    sessionUserId,
   } = useReportWorkflow();
 
   const [analystOpen, setAnalystOpen] = useState(false);
@@ -197,12 +192,7 @@ export function ReportWorkflowShell({ children }: { children: React.ReactNode })
         suspiciousImg={suspiciousImg}
         isCaseSaved={isCaseSaved}
         isSaving={isSaving}
-        saveSent={saveSent}
-        saveEmail={saveEmail}
-        onSaveEmailChange={setSaveEmail}
-        onSendMagicLink={handleSendMagicLink}
         onSaveCase={handleSaveCase}
-        sessionUserId={sessionUserId}
       />
     );
   }

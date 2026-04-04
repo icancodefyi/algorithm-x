@@ -19,12 +19,7 @@ interface ReportWorkflowContextValue {
   hashCopied: boolean;
   isCaseSaved: boolean;
   isSaving: boolean;
-  saveSent: boolean;
-  saveEmail: string;
-  sessionUserId: string | undefined;
-  setSaveEmail: (email: string) => void;
   copyHash: () => void;
-  handleSendMagicLink: (e: React.FormEvent) => Promise<void>;
   handleSaveCase: () => Promise<void>;
 }
 
@@ -48,13 +43,8 @@ export function ReportWorkflowProvider({
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [hashCopied, setHashCopied] = useState(false);
-  const [saveEmail, setSaveEmail] = useState("");
-  const [saveSent, setSaveSent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCaseSaved, setIsCaseSaved] = useState(false);
-
-  // No auth — treat every visitor as an anonymous user.
-  const sessionUserId: string | undefined = undefined;
 
   useEffect(() => {
     if (!caseId) return;
@@ -128,13 +118,6 @@ export function ReportWorkflowProvider({
     });
   }
 
-  async function handleSendMagicLink(e: React.FormEvent) {
-    e.preventDefault();
-    // Auth removed — nothing to do.
-    setSaveSent(true);
-    void saveEmail;
-  }
-
   async function handleSaveCase() {
     if (!caseData) return;
     if (caseData.pipeline_type !== "ncii" && !analysis) return;
@@ -166,12 +149,7 @@ export function ReportWorkflowProvider({
       hashCopied,
       isCaseSaved,
       isSaving,
-      saveSent,
-      saveEmail,
-      sessionUserId,
-      setSaveEmail,
       copyHash,
-      handleSendMagicLink,
       handleSaveCase,
     }),
     [
@@ -186,9 +164,6 @@ export function ReportWorkflowProvider({
       hashCopied,
       isCaseSaved,
       isSaving,
-      saveSent,
-      saveEmail,
-      sessionUserId,
     ],
   );
 
