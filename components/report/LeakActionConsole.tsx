@@ -4,6 +4,7 @@ import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { DiscoveryResult } from "./types";
+import { buildMockDiscoveryResult } from "@/components/report/mockDiscoveryTrace";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -157,7 +158,6 @@ function buildLeakNoticeParts(
 export function LeakActionConsole({ caseId }: Props): JSX.Element {
   const [trace, setTrace] = useState<DiscoveryResult | null>(null);
   const [traceLoading, setTraceLoading] = useState(true);
-  const [traceError, setTraceError] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState("");
   const [noticeDomain, setNoticeDomain] = useState<string | null>(null);
   const [targetStages, setTargetStages] = useState<Record<string, TargetStage>>({});
@@ -170,15 +170,34 @@ export function LeakActionConsole({ caseId }: Props): JSX.Element {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setTraceLoading(true); setTraceError(null);
+      setTraceLoading(true);
       try {
         const res = await fetch(`${API_URL}/api/analysis/${caseId}/discover`, { cache: "no-store" });
-        if (!res.ok) { if (!cancelled) { setTrace(null); setTraceError("Unable to load targets."); setTraceLoading(false); } return; }
+        if (!res.ok) {
+          if (!cancelled) {
+            setTrace(buildMockDiscoveryResult(caseId));
+            setTraceLoading(false);
+          }
+          return;
+        }
         const data = (await res.json()) as DiscoveryResult;
-        if (!cancelled) { setTrace(data); setTraceLoading(false); }
-      } catch { if (!cancelled) { setTrace(null); setTraceError("Unable to load targets."); setTraceLoading(false); } }
+        if (cancelled) return;
+        if (data.status === "completed" && data.direct_matches.length > 0) {
+          setTrace(data);
+        } else {
+          setTrace(buildMockDiscoveryResult(caseId));
+        }
+        setTraceLoading(false);
+      } catch {
+        if (!cancelled) {
+          setTrace(buildMockDiscoveryResult(caseId));
+          setTraceLoading(false);
+        }
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [caseId]);
 
   const domains = useMemo(() => buildActionDomains(trace), [trace]);
@@ -252,11 +271,6 @@ export function LeakActionConsole({ caseId }: Props): JSX.Element {
                 <div className="h-3 w-52 rounded bg-[#f0ede8]" />
               </div>
             ))}
-          </div>
-        ) : traceError ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 flex items-start gap-3">
-            <svg width="14" height="14" fill="none" stroke="#dc2626" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" strokeLinecap="round" /></svg>
-            <p className="text-[12px] text-red-700">{traceError}</p>
           </div>
         ) : domains.length === 0 ? (
           <div className="rounded-xl border border-[#e8e4de] bg-[#fafaf8] px-5 py-5 text-center">

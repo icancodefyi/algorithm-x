@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useReportWorkflow } from "@/components/report/ReportWorkflowContext";
 import { buildCaseRef, buildTimeline, TAKEDOWN_GUIDES } from "@/components/report/utils";
 import { TakedownGuidance } from "@/components/report/TakedownGuidance";
+import { LeakActionConsole } from "@/components/report/LeakActionConsole";
 import { EvidenceMetadata } from "@/components/report/EvidenceMetadata";
 import { EvidenceTimeline } from "@/components/report/EvidenceTimeline";
 import { AuditTrail } from "@/components/report/AuditTrail";
@@ -35,6 +36,37 @@ export default function TakedownStepPage() {
           </div>
         </div>
       </section>
+
+      {/* Same bulk + per-domain removal flow as NCII leak report (shared demo domains) */}
+      <div className="mb-6 overflow-hidden rounded-xl border border-[#e8e4de] bg-white">
+        <div className="border-b border-[#e8e4de] px-6 py-5 sm:px-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af] mb-1.5">Bulk Takedown</p>
+              <h2 className="text-[17px] font-semibold tracking-tight text-[#0a0a0a]">Escalate all platforms at once</h2>
+              <p className="mt-1 text-[12.5px] text-[#6b7280] leading-relaxed max-w-lg">
+                Generate one case-wide removal packet covering every detected domain. Per-domain actions remain available below.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:items-end sm:shrink-0">
+              <Link
+                href={`/takedown?caseId=${caseId}`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0a0a0a] px-4 py-2.5 text-[12px] font-medium text-white hover:bg-[#1a1a1a] transition-colors"
+              >
+                Open Bulk Takedown
+              </Link>
+              <Link
+                href={`/investigate?caseId=${caseId}`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-2 text-[12px] font-medium text-[#374151] hover:bg-white transition-colors"
+              >
+                Review domains
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <LeakActionConsole caseId={caseId} />
 
       {/* Takedown guidance */}
       <TakedownGuidance
