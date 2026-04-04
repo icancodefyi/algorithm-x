@@ -5,8 +5,7 @@ import Image from "next/image";
 import { useTranslation } from "@/components/i18n/LanguageProvider";
 import { buildMockDiscoveryResult } from "@/components/report/mockDiscoveryTrace";
 import type { DiscoveryResult } from "@/components/report/types";
-
-const LOGO_KEY = process.env.NEXT_PUBLIC_LOGO_DEV_KEY ?? "pk_FRWLyzqbRcmEUk2DRouw0w";
+import { domainIconUrl } from "@/lib/domainIconUrl";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -46,7 +45,7 @@ function PlatformLogo({ domain, size = 40 }: { domain?: string | null; size?: nu
 
   return (
     <Image
-      src={`https://img.logo.dev/${normalizedDomain}?token=${LOGO_KEY}&size=64`}
+      src={domainIconUrl(normalizedDomain, 64)}
       alt={`${normalizedDomain} logo`}
       width={size}
       height={size}

@@ -2,9 +2,11 @@
 
 import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { DiscoveryResult } from "./types";
 import { buildMockDiscoveryResult } from "@/components/report/mockDiscoveryTrace";
+import { domainIconUrl } from "@/lib/domainIconUrl";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -69,6 +71,64 @@ const STAGE_STYLES: Record<TargetStage, { label: string; text: string; bg: strin
   investigated: { label: "Investigated", text: "text-blue-700",   bg: "bg-blue-50",   border: "border-blue-200",   icon: "bg-blue-500" },
   notice_ready: { label: "Notice Ready", text: "text-rose-700",   bg: "bg-rose-50",   border: "border-rose-200",   icon: "bg-rose-500" },
 };
+
+function formatDomainKey(domain: string) {
+  return domain.trim().toLowerCase();
+}
+
+function MatchThumb({ url }: { url: string }) {
+  const [hide, setHide] = useState(false);
+  if (hide) return null;
+  return (
+    <div className="shrink-0 rounded-lg border border-[#e8e4de] bg-[#fafaf8] p-1">
+      {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary CDN hosts from discovery */}
+      <img
+        src={url}
+        alt=""
+        className="h-12 w-12 rounded-md object-cover bg-white"
+        loading="lazy"
+        onError={() => setHide(true)}
+      />
+    </div>
+  );
+}
+
+function ConsoleDomainLogo({ domain, size = 40 }: { domain: string; size?: number }) {
+  const key = formatDomainKey(domain);
+  const [failed, setFailed] = useState(false);
+  if (!key || failed) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-xl border border-[#e8e4de] bg-[#f5f3f0] shrink-0"
+        style={{ width: size, height: size }}
+      >
+        <span className="font-mono text-[11px] uppercase tracking-wider text-[#6b7280]">{key.slice(0, 2) || "—"}</span>
+      </div>
+    );
+  }
+  const src = domainIconUrl(key, 64);
+  if (!src) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-xl border border-[#e8e4de] bg-[#f5f3f0] shrink-0"
+        style={{ width: size, height: size }}
+      >
+        <span className="font-mono text-[11px] uppercase tracking-wider text-[#6b7280]">{key.slice(0, 2)}</span>
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={size}
+      height={size}
+      onError={() => setFailed(true)}
+      className="rounded-xl border border-[#e8e4de] bg-white object-contain p-1.5 shrink-0"
+      unoptimized
+    />
+  );
+}
 
 function buildMockLookup(domain: string): { intel: IntelligenceResult; takedown: TakedownResult } {
   const d = domain.toLowerCase();
@@ -295,14 +355,20 @@ export function LeakActionConsole({ caseId }: Props): JSX.Element {
                     }`}
                     onClick={() => { setSelectedDomain(item.domain); mark(item.domain, "investigated"); }}
                   >
-                    {/* Card top row */}
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <p className="text-[13px] font-semibold text-[#0a0a0a] truncate">{item.domain}</p>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] font-mono ${ss.bg} ${ss.border} ${ss.text}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${ss.icon}`} />
-                          {ss.label}
-                        </span>
+                    {/* Card top: favicon + optional match thumb (same assets as distribution trace) */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <ConsoleDomainLogo domain={item.domain} size={40} />
+                      {item.kind === "direct_match" && item.imageUrls[0] ? (
+                        <MatchThumb url={item.imageUrls[0]} />
+                      ) : null}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-[13px] font-semibold text-[#0a0a0a] truncate">{item.domain}</p>
+                          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] font-mono shrink-0 ${ss.bg} ${ss.border} ${ss.text}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${ss.icon}`} />
+                            {ss.label}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -354,11 +420,14 @@ export function LeakActionConsole({ caseId }: Props): JSX.Element {
             {activeDomain && (
               <div className="rounded-xl border border-[#e8e4de] bg-white overflow-hidden">
                 <div className="border-b border-[#f0ede8] px-5 py-4 flex items-center justify-between gap-3 bg-[#fafaf8]">
-                  <div>
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-[#9ca3af] mb-1">Investigation Workspace</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[15px] font-semibold text-[#0a0a0a]">{activeDomain.domain}</p>
-                      <span className="font-mono text-[10px] text-[#9ca3af] bg-[#f0ede8] px-2 py-0.5 rounded-md">Case {caseRef}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <ConsoleDomainLogo domain={activeDomain.domain} size={44} />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-[#9ca3af] mb-1">Investigation Workspace</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[15px] font-semibold text-[#0a0a0a] truncate">{activeDomain.domain}</p>
+                        <span className="font-mono text-[10px] text-[#9ca3af] bg-[#f0ede8] px-2 py-0.5 rounded-md shrink-0">Case {caseRef}</span>
+                      </div>
                     </div>
                   </div>
                   <button
