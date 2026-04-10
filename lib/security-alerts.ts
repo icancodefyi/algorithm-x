@@ -46,6 +46,7 @@ export function isSecurityAlertSource(v: unknown): v is SecurityAlertSource {
     v === "cve" ||
     v === "policy" ||
     v === "countermeasures" ||
+    v === "user_complaint" ||
     v === "system"
   );
 }

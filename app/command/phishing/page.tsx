@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { buildPhishingIncidentNarrative } from "@/lib/incident-report-bundles";
 import type { SpearPhishingAnalysis } from "@/types/spear-phishing";
 import type { SecurityAlertSeverity } from "@/types/security-platform";
 
@@ -42,11 +43,26 @@ export default function SpearPhishingPage() {
   const [publishBusy, setPublishBusy] = useState(false);
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
 
+  const [reportTitle, setReportTitle] = useState("");
+  const [additionalContext, setAdditionalContext] = useState("");
+  const [rpPlatform, setRpPlatform] = useState("");
+  const [rpRelatedCase, setRpRelatedCase] = useState("");
+  const [rpContactEmail, setRpContactEmail] = useState("");
+  const [rpConsent, setRpConsent] = useState(false);
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportMsg, setReportMsg] = useState<string | null>(null);
+  const [reportSuccess, setReportSuccess] = useState<{
+    complaintRef: string;
+    nextSteps: string[];
+  } | null>(null);
+
   async function analyze() {
     setLoading(true);
     setError(null);
     setResult(null);
     setPublishMsg(null);
+    setReportSuccess(null);
+    setReportMsg(null);
     try {
       const res = await fetch("/api/security/phishing/analyze", {
         method: "POST",
@@ -105,6 +121,76 @@ export default function SpearPhishingPage() {
     }
   }
 
+  const evidencePreview = useMemo(() => {
+    if (!result) return "";
+    return buildPhishingIncidentNarrative({
+      emailBody,
+      url,
+      result,
+      additionalContext: additionalContext.trim() || "(none yet — add below before submitting)",
+    });
+  }, [result, emailBody, url, additionalContext]);
+
+  async function submitStructuredReport() {
+    if (!result) return;
+    if (!rpConsent) {
+      setReportMsg("Confirm consent to submit a structured report.");
+      return;
+    }
+    const narrative = buildPhishingIncidentNarrative({
+      emailBody,
+      url,
+      result,
+      additionalContext,
+    });
+    if (narrative.length < 40) {
+      setReportMsg("Narrative too short.");
+      return;
+    }
+    setReportBusy(true);
+    setReportMsg(null);
+    setReportSuccess(null);
+    try {
+      const res = await fetch("/api/security/complaints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          incidentType: "spear_phishing",
+          title: reportTitle.trim() || `Spear-phishing triage — ${verdictLabel(result.verdict)}`,
+          narrative,
+          evidenceUrls: url.trim() ? url.trim() : undefined,
+          platformOrChannel: rpPlatform.trim() || undefined,
+          relatedCaseId: rpRelatedCase.trim() || undefined,
+          contactEmail: rpContactEmail.trim() || undefined,
+          consentFollowup: rpConsent,
+        }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        complaintRef?: string;
+        nextSteps?: string[];
+        error?: string;
+      };
+      if (!res.ok) {
+        setReportMsg(json.error ?? "Submit failed");
+        return;
+      }
+      if (json.complaintRef && json.nextSteps) {
+        setReportSuccess({ complaintRef: json.complaintRef, nextSteps: json.nextSteps });
+        setAdditionalContext("");
+        setReportTitle("");
+        setRpPlatform("");
+        setRpRelatedCase("");
+        setRpContactEmail("");
+        setRpConsent(false);
+      }
+    } catch {
+      setReportMsg("Network error.");
+    } finally {
+      setReportBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#fafaf8]">
       <header className="border-b border-[#e8e4de] px-4 sm:px-8 py-4 flex flex-wrap items-center gap-3 bg-white sticky top-0 z-10">
@@ -153,6 +239,14 @@ export default function SpearPhishingPage() {
             <strong className="font-medium text-[#374151]">Groq</strong> returns a structured risk score and rationale, blended with{" "}
             <strong className="font-medium text-[#374151]">rule-based signals</strong> (35% / 65%). Without the key, only heuristics run. Not a replacement for enterprise email security.
           </p>
+          <p className="text-[13px] text-[#6b7280] mt-3">
+            <strong className="font-medium text-[#374151]">One-page flow:</strong> run analysis, review evidence, add context, then file a structured report here.
+            Standalone form:{" "}
+            <Link href="/command/complaint" className="text-indigo-600 font-medium hover:text-indigo-800">
+              /command/complaint
+            </Link>
+            .
+          </p>
         </div>
 
         <div className="rounded-xl border border-[#e8e4de] bg-white p-5 sm:p-6 shadow-sm space-y-5">
@@ -197,7 +291,7 @@ export default function SpearPhishingPage() {
                 onClick={() => void publishAlert()}
                 className="px-6 py-2.5 rounded-full border border-[#e8e4de] text-[13px] font-medium text-[#374151] hover:bg-[#fafaf8] disabled:opacity-40 transition-colors"
               >
-                {publishBusy ? "Publishing…" : "Add to Command alerts"}
+                {publishBusy ? "Publishing…" : "Quick alert only"}
               </button>
             )}
           </div>
@@ -212,6 +306,9 @@ export default function SpearPhishingPage() {
 
         {result && (
           <div className="rounded-xl border border-[#e8e4de] bg-white p-5 sm:p-6 shadow-sm space-y-5">
+            <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-[0.25em]">
+              Analysis result
+            </p>
             <div className="flex flex-wrap items-end gap-6">
               <div>
                 <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-widest mb-1">
@@ -272,6 +369,127 @@ export default function SpearPhishingPage() {
                 Set <code className="text-[11px]">GROQ_API_KEY</code> for LLM risk scoring and rationale (same key as Case Analyst).
               </p>
             )}
+
+            <div className="border-t border-[#e8e4de] pt-6 space-y-4">
+              <p className="font-mono text-[10px] text-rose-700 uppercase tracking-[0.25em]">
+                Act here — structured report
+              </p>
+              <p className="text-[13px] text-[#6b7280]">
+                The bundle below attaches your original message, URL, scores, signals, and any note you add. Submitting creates a{" "}
+                <strong className="text-[#374151]">reference ID</strong> and appears on Security Command.
+              </p>
+
+              {reportSuccess && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-[13px] text-emerald-900">
+                  <p className="font-mono text-[11px] uppercase tracking-wider mb-1">Saved</p>
+                  <p>
+                    Reference <span className="font-mono font-semibold">{reportSuccess.complaintRef}</span>
+                  </p>
+                  <ul className="list-disc pl-5 mt-2 text-[12px] text-[#374151] space-y-1">
+                    {reportSuccess.nextSteps.slice(0, 3).map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div>
+                <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-widest mb-2">
+                  Evidence bundle (preview)
+                </p>
+                <pre className="max-h-48 overflow-y-auto rounded-lg border border-[#e8e4de] bg-[#fafaf8] p-3 text-[11px] text-[#4b5563] whitespace-pre-wrap font-mono leading-relaxed">
+                  {evidencePreview}
+                </pre>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-[#a8a29e] mb-2">
+                    Report title (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={reportTitle}
+                    onChange={(e) => setReportTitle(e.target.value)}
+                    placeholder="Short label for your records"
+                    className="w-full rounded-xl border border-[#e8e4de] px-3 py-2 text-[13px] text-[#0a0a0a]"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-[#a8a29e] mb-2">
+                    Additional context for responders
+                  </label>
+                  <textarea
+                    value={additionalContext}
+                    onChange={(e) => setAdditionalContext(e.target.value)}
+                    rows={4}
+                    placeholder="Team name, ticket id, what you already tried, who was targeted…"
+                    className="w-full rounded-xl border border-[#e8e4de] px-3 py-2 text-[13px] text-[#0a0a0a] resize-y"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-[#a8a29e] mb-2">
+                    Channel / platform
+                  </label>
+                  <input
+                    type="text"
+                    value={rpPlatform}
+                    onChange={(e) => setRpPlatform(e.target.value)}
+                    placeholder="Work email, Teams, …"
+                    className="w-full rounded-xl border border-[#e8e4de] px-3 py-2 text-[13px]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-[#a8a29e] mb-2">
+                    Related Sniffer case ID
+                  </label>
+                  <input
+                    type="text"
+                    value={rpRelatedCase}
+                    onChange={(e) => setRpRelatedCase(e.target.value)}
+                    className="w-full rounded-xl border border-[#e8e4de] px-3 py-2 text-[13px] font-mono"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-[#a8a29e] mb-2">
+                    Contact email (optional)
+                  </label>
+                  <input
+                    type="email"
+                    value={rpContactEmail}
+                    onChange={(e) => setRpContactEmail(e.target.value)}
+                    className="w-full rounded-xl border border-[#e8e4de] px-3 py-2 text-[13px]"
+                  />
+                </div>
+              </div>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rpConsent}
+                  onChange={(e) => setRpConsent(e.target.checked)}
+                  className="mt-1 rounded border-[#e8e4de]"
+                />
+                <span className="text-[12px] text-[#6b7280]">
+                  I consent to storing this report with the evidence bundle above for incident handling.
+                </span>
+              </label>
+
+              {reportMsg && (
+                <p className={`text-[13px] ${reportMsg.includes("fail") || reportMsg.includes("Mongo") ? "text-red-600" : "text-amber-700"}`}>
+                  {reportMsg}
+                </p>
+              )}
+
+              <button
+                type="button"
+                disabled={reportBusy || !rpConsent}
+                onClick={() => void submitStructuredReport()}
+                className="px-6 py-2.5 rounded-full bg-rose-600 text-white text-[13px] font-medium hover:bg-rose-700 disabled:opacity-40 transition-colors"
+              >
+                {reportBusy ? "Submitting…" : "Submit structured report"}
+              </button>
+            </div>
           </div>
         )}
       </main>

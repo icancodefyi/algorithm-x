@@ -26,6 +26,13 @@ const MODULES: Array<{
     ready: true,
   },
   {
+    id: "complaint",
+    title: "Structured complaint",
+    description: "Document scams & incidents with a reference ID and next steps.",
+    href: "/command/complaint",
+    ready: true,
+  },
+  {
     id: "phishing",
     title: "Spear-phishing",
     description: "Heuristics + Groq JSON risk score (blended).",

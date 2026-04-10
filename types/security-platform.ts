@@ -6,6 +6,7 @@ export type SecurityAlertSource =
   | "cve"
   | "policy"
   | "countermeasures"
+  | "user_complaint"
   | "system";
 
 export type SecurityAlertSeverity = "critical" | "high" | "medium" | "low" | "info";

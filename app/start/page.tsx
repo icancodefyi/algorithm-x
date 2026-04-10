@@ -35,6 +35,15 @@ export default function StartPage() {
           <p className="text-[14px] text-[#6b7280] max-w-xl mx-auto">
             {t.start.subheading}
           </p>
+          <p className="text-[13px] text-[#6b7280] max-w-xl mx-auto mt-4 text-center">
+            <Link href="/command/complaint" className="text-indigo-600 font-medium hover:text-indigo-800">
+              Structured security complaint
+            </Link>
+            <span className="text-[#d4cfc9] mx-2">·</span>
+            <Link href="/command" className="text-indigo-600 font-medium hover:text-indigo-800">
+              Command hub
+            </Link>
+          </p>
         </div>
 
         {/* Unified workflow visual */}
