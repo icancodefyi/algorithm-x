@@ -75,6 +75,14 @@ export function Navbar() {
               <span className="text-[9px] ml-0.5" style={{ color: "#b0a89e" }}>›</span>
             </Link>
           ))}
+          <Link
+            href="/command"
+            className="flex items-center gap-0.5 text-[12.5px] font-medium transition-colors hover:text-[#0a0a0a]"
+            style={{ color: "#7a7268", letterSpacing: "0.04em" }}
+          >
+            Command
+            <span className="text-[9px] ml-0.5" style={{ color: "#b0a89e" }}>›</span>
+          </Link>
         </div>
 
         {/* Desktop CTAs */}
@@ -145,6 +153,18 @@ export function Navbar() {
 
             </Link>
           ))}
+          <Link
+            href="/command"
+            onClick={() => setMenuOpen(false)}
+            className="py-3.5 text-[13px] font-medium border-b transition-colors hover:text-[#0a0a0a]"
+            style={{
+              color: "#5a5248",
+              letterSpacing: "0.04em",
+              borderColor: "#f0ede8",
+            }}
+          >
+            Command
+          </Link>
           <div className="mt-5 flex flex-col gap-3">
             <Link
               href="/start"
