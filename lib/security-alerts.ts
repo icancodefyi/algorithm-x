@@ -109,7 +109,7 @@ export function demoSecurityAlerts(): SecurityAlert[] {
       title: "Possible spear-phishing indicators",
       message: "Demo: executive impersonation language detected.",
       entityId: null,
-      href: "/command/stub/phishing",
+      href: "/command/phishing",
       createdAt: now,
       acknowledged: false,
     },

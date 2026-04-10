@@ -28,9 +28,9 @@ const MODULES: Array<{
   {
     id: "phishing",
     title: "Spear-phishing",
-    description: "Email / body / URL analysis (coming next).",
-    href: "/command/stub/phishing",
-    ready: false,
+    description: "Heuristics + Groq JSON risk score (blended).",
+    href: "/command/phishing",
+    ready: true,
   },
   {
     id: "malware",
