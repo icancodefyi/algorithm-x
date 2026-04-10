@@ -147,6 +147,20 @@ function UploadContent() {
         throw new Error(err.detail || "Analysis failed");
       }
 
+      // 3b. Security Command alert (Phase 2 — non-blocking; requires MONGODB_URI for persistence)
+      void fetch("/api/security/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "media_verify",
+          severity: "medium",
+          title: "Media authenticity analysis completed",
+          message: `${issueType} · ${platform.label}. Review the forensic report for verdict and signals.`,
+          entityId: caseId,
+          href: `/report/${caseId}/analysis`,
+        }),
+      }).catch(() => {});
+
       // 4. Kick off discovery scan in background (non-blocking)
       const discoveryData = new FormData();
       discoveryData.append("suspicious_image", suspiciousFile);
@@ -170,19 +184,27 @@ function UploadContent() {
         <AnalysisLoader image={suspiciousPreview || ""} onComplete={() => {}} />
       )}
 
-      <header className="border-b border-[#e8e4de] px-6 py-4 flex items-center gap-3 bg-white">
+      <header className="border-b border-[#e8e4de] px-6 py-4 flex flex-wrap items-center gap-3 bg-white">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <Link
+            href="/"
+            className="font-mono text-[13px] text-[#0a0a0a] tracking-widest uppercase hover:opacity-70 transition-opacity"
+          >
+            Sniffer
+          </Link>
+          <span className="text-[#d4cfc9]">/</span>
+          <Link href="/start" className="text-[13px] text-[#9ca3af] hover:text-[#0a0a0a] transition-colors">
+            Start
+          </Link>
+          <span className="text-[#d4cfc9]">/</span>
+          <span className="text-[13px] text-[#9ca3af]">{t.upload.breadcrumb}</span>
+        </div>
         <Link
-          href="/"
-          className="font-mono text-[13px] text-[#0a0a0a] tracking-widest uppercase hover:opacity-70 transition-opacity"
+          href="/command"
+          className="text-[12px] text-[#9ca3af] hover:text-[#0a0a0a] transition-colors border border-[#e8e4de] px-3 py-1.5 rounded-lg shrink-0"
         >
-          Sniffer
+          Command
         </Link>
-        <span className="text-[#d4cfc9]">/</span>
-        <Link href="/start" className="text-[13px] text-[#9ca3af] hover:text-[#0a0a0a] transition-colors">
-          Start
-        </Link>
-        <span className="text-[#d4cfc9]">/</span>
-        <span className="text-[13px] text-[#9ca3af]">{t.upload.breadcrumb}</span>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
@@ -203,6 +225,9 @@ function UploadContent() {
           </h1>
           <p className="text-[14px] text-[#6b7280]">
             {t.upload.subheading}
+          </p>
+          <p className="text-[11px] text-[#a8a29e] mt-2 leading-relaxed max-w-xl">
+            Heavy recompression, tight crops, or adversarial edits may shift scores; interpret alongside forensic signals in the report.
           </p>
         </div>
 
