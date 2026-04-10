@@ -98,7 +98,7 @@ export function demoSecurityAlerts(): SecurityAlert[] {
       title: "Internet-facing asset matches known CVE",
       message: "Demo: prioritize patch for payment-api exposure.",
       entityId: "asset-payment-api",
-      href: "/command/stub/vulnerabilities",
+      href: "/command/vulnerabilities",
       createdAt: now,
       acknowledged: false,
     },

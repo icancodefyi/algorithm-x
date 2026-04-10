@@ -42,9 +42,9 @@ const MODULES: Array<{
   {
     id: "vulns",
     title: "Vulnerabilities",
-    description: "CVE + asset prioritization (coming next).",
-    href: "/command/stub/vulnerabilities",
-    ready: false,
+    description: "CVE + asset context, explainable prioritization (sample data).",
+    href: "/command/vulnerabilities",
+    ready: true,
   },
   {
     id: "policy",

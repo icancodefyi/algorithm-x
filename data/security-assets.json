@@ -1,0 +1,37 @@
+[
+  {
+    "id": "payment-api",
+    "name": "Payment API",
+    "role": "Revenue / PCI-adjacent",
+    "internetExposed": true,
+    "criticality": "high"
+  },
+  {
+    "id": "vpn-gateway",
+    "name": "Corporate VPN gateway",
+    "role": "Remote access",
+    "internetExposed": true,
+    "criticality": "high"
+  },
+  {
+    "id": "marketing-site",
+    "name": "Marketing website",
+    "role": "Public content",
+    "internetExposed": true,
+    "criticality": "medium"
+  },
+  {
+    "id": "internal-hr",
+    "name": "HR self-service (internal)",
+    "role": "Employee data",
+    "internetExposed": false,
+    "criticality": "medium"
+  },
+  {
+    "id": "build-runner",
+    "name": "CI build runner",
+    "role": "Software supply chain",
+    "internetExposed": false,
+    "criticality": "high"
+  }
+]
