@@ -199,12 +199,20 @@ function UploadContent() {
           <span className="text-[#d4cfc9]">/</span>
           <span className="text-[13px] text-[#9ca3af]">{t.upload.breadcrumb}</span>
         </div>
-        <Link
-          href="/command"
-          className="text-[12px] text-[#9ca3af] hover:text-[#0a0a0a] transition-colors border border-[#e8e4de] px-3 py-1.5 rounded-lg shrink-0"
-        >
-          Command
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Link
+            href="/command/mms"
+            className="text-[12px] text-[#9ca3af] hover:text-[#0a0a0a] transition-colors border border-[#e8e4de] px-3 py-1.5 rounded-lg"
+          >
+            MMS video
+          </Link>
+          <Link
+            href="/command"
+            className="text-[12px] text-[#9ca3af] hover:text-[#0a0a0a] transition-colors border border-[#e8e4de] px-3 py-1.5 rounded-lg"
+          >
+            Command
+          </Link>
+        </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">

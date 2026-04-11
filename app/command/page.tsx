@@ -2,21 +2,35 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { Flame } from "lucide-react";
 import type { SecurityAlert, SecurityAlertsOverview } from "@/types/security-platform";
 
-const MODULES: Array<{
+type CommandModule = {
   id: string;
   title: string;
   description: string;
   href: string;
   ready: boolean;
-}> = [
+  /** Highlighted “hot” entry — shown first with stronger visual treatment */
+  hot?: boolean;
+};
+
+const MODULES: CommandModule[] = [
   {
-    id: "media",
-    title: "Media & deepfake",
-    description: "Image authenticity, forensic report, neural verdict.",
+    id: "deepfake",
+    title: "Deepfake verify",
+    description: "Still images — platform context, reference shot, forensic report.",
     href: "/verify/upload",
     ready: true,
+    hot: true,
+  },
+  {
+    id: "mms",
+    title: "MMS / video clip",
+    description: "Short mobile clips — extract a keyframe, same authenticity pipeline.",
+    href: "/command/mms",
+    ready: true,
+    hot: true,
   },
   {
     id: "dashboard",
@@ -56,9 +70,9 @@ const MODULES: Array<{
   {
     id: "policy",
     title: "Policy Q&A",
-    description: "Natural-language policy queries (coming next).",
-    href: "/command/stub/policy",
-    ready: false,
+    description: "Markdown corpus in data/policies; Groq JSON + citations.",
+    href: "/command/policy",
+    ready: true,
   },
   {
     id: "counter",
@@ -102,6 +116,52 @@ function riskLabel(score: number): string {
   return "Calm";
 }
 
+function ModuleCard({ m }: { m: CommandModule }) {
+  const isHot = Boolean(m.hot);
+  return (
+    <Link
+      href={m.href}
+      className={`group relative overflow-hidden rounded-xl border p-5 transition-all ${
+        isHot
+          ? "border-orange-300/90 bg-linear-to-br from-orange-50 via-white to-amber-50/80 shadow-md shadow-orange-200/40 hover:border-orange-400 hover:shadow-lg hover:shadow-orange-200/50"
+          : "border-[#e8e4de] bg-white shadow-sm hover:border-[#c4bdb5]"
+      }`}
+      aria-label={isHot ? `${m.title}, hot pick` : m.title}
+    >
+      {isHot && (
+        <span
+          className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-orange-400/15 blur-2xl"
+          aria-hidden
+        />
+      )}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h2 className="text-[15px] font-medium text-[#0a0a0a]">{m.title}</h2>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+          {isHot && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-linear-to-r from-orange-500 to-rose-500 px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-wide text-white shadow-sm">
+              <Flame className="h-3 w-3" strokeWidth={2.5} aria-hidden />
+              Hot
+            </span>
+          )}
+          {m.ready ? (
+            <span className="text-[9px] font-mono uppercase text-emerald-600">Live</span>
+          ) : (
+            <span className="text-[9px] font-mono uppercase text-[#9ca3af]">Soon</span>
+          )}
+        </div>
+      </div>
+      <p className="text-[12px] text-[#6b7280] leading-relaxed">{m.description}</p>
+      <span
+        className={`mt-3 inline-block text-[11px] font-mono ${
+          isHot ? "text-orange-700 group-hover:text-orange-900" : "text-indigo-600 group-hover:text-indigo-800"
+        }`}
+      >
+        Go →
+      </span>
+    </Link>
+  );
+}
+
 export default function CommandPage() {
   const [data, setData] = useState<SecurityAlertsOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +190,8 @@ export default function CommandPage() {
   const composite = data?.compositeRisk ?? 0;
   const openCount = data?.openCount ?? 0;
   const alerts = data?.alerts ?? [];
+  const hotModules = MODULES.filter((m) => m.hot);
+  const otherModules = MODULES.filter((m) => !m.hot);
 
   return (
     <div className="min-h-screen bg-[#fafaf8]">
@@ -246,31 +308,31 @@ export default function CommandPage() {
           </div>
         </section>
 
-        <section>
-          <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-[0.25em] mb-4">
-            Capability modules
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {MODULES.map((m) => (
-              <Link
-                key={m.id}
-                href={m.href}
-                className="group rounded-xl border border-[#e8e4de] bg-white p-5 shadow-sm hover:border-[#c4bdb5] transition-colors"
-              >
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h2 className="text-[15px] font-medium text-[#0a0a0a]">{m.title}</h2>
-                  {m.ready ? (
-                    <span className="text-[9px] font-mono uppercase text-emerald-600">Live</span>
-                  ) : (
-                    <span className="text-[9px] font-mono uppercase text-[#9ca3af]">Soon</span>
-                  )}
-                </div>
-                <p className="text-[12px] text-[#6b7280] leading-relaxed">{m.description}</p>
-                <span className="mt-3 inline-block text-[11px] font-mono text-indigo-600 group-hover:text-indigo-800">
-                  Go →
-                </span>
-              </Link>
-            ))}
+        <section className="space-y-8">
+          <div>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-orange-800">
+                <Flame className="h-3.5 w-3.5 text-orange-500" strokeWidth={2.5} aria-hidden />
+                Hot picks
+              </span>
+              <span className="text-[12px] text-[#6b7280]">Deepfake stills &amp; MMS clips — fastest path to a forensic report</span>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {hotModules.map((m) => (
+                <ModuleCard key={m.id} m={m} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-[0.25em] mb-4">
+              All capability modules
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {otherModules.map((m) => (
+                <ModuleCard key={m.id} m={m} />
+              ))}
+            </div>
           </div>
         </section>
       </main>
